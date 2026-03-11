@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orchestra Supervisor"
+  short_description: "Codex entrypoint for one supervised Agent-Orchestra task attempt."
+  default_prompt: "Run one supervised Agent-Orchestra task attempt from Codex by following the orchestra-supervisor workflow contract."

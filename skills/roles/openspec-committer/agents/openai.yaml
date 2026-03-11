@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Committer"
+  short_description: "Perform pass confirmation and archival after a task validates."
+  default_prompt: "After a PASS evidence line is written, toggle the task checkbox, update feature_list.json, append progress.txt, and optionally create a checkpoint commit."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Feature Tracker"
+  short_description: "Build or repair feature_list.json for an OpenSpec change."
+  default_prompt: "Generate a durable feature_list.json for an OpenSpec change from tasks, refs, and acceptance criteria. Handle multi-task refs correctly."

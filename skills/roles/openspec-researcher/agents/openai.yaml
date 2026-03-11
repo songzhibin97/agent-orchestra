@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Researcher"
+  short_description: "Research blockers and propose next steps."
+  default_prompt: "Investigate an OpenSpec blocker, gather evidence from configured sources, and return concrete unblock guidance written to unblock-note.md."

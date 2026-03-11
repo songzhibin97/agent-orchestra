@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orchestra Run"
+  short_description: "Codex entrypoint for full Agent-Orchestra change execution."
+  default_prompt: "Run a full Agent-Orchestra change from Codex by following the orchestra-run workflow contract."

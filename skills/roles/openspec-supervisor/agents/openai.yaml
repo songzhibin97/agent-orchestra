@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Supervisor"
+  short_description: "Supervise one OpenSpec task safely through any dispatcher."
+  default_prompt: "Supervise one OpenSpec task through the configured dispatcher, validate the bundle, and update bookkeeping with strict role boundaries."

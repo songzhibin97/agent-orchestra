@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dispatch: Codex"
+  short_description: "Dispatch a task to Codex CLI in full-auto mode."
+  default_prompt: "Use codex exec --full-auto to dispatch the prepared TASK_PROMPT to Codex and capture the result."

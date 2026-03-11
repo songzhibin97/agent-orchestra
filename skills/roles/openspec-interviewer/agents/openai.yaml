@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Interviewer"
+  short_description: "Clarify vague OpenSpec change requests."
+  default_prompt: "Interview the user to turn a rough OpenSpec change request into concrete scope, constraints, and acceptance criteria."

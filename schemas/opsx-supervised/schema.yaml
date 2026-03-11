@@ -1,0 +1,374 @@
+name: opsx-supervised
+version: 1
+description: OpenSpec workflow with a clarification brief and repository-local ledgers layered around standard tasks
+artifacts:
+  - id: brief
+    generates: brief.md
+    description: Clarification brief captured before proposal drafting
+    template: brief.md
+    instruction: >
+      Create a concise implementation brief that removes ambiguity before the
+      formal proposal.
+
+
+      Required fields:
+
+      - Goal
+
+      - Non-goals
+
+      - Actors / entry points
+
+      - Constraints
+
+      - Acceptance criteria
+
+      - Validation scope
+
+      - Open questions or assumptions
+
+
+      Keep it compact and decision-oriented. This file is a repository-local
+      extension that feeds proposal drafting; it is not a native OpenSpec spec artifact.
+    requires: []
+  - id: proposal
+    generates: proposal.md
+    description: Initial proposal document outlining the change
+    template: proposal.md
+    instruction: >
+      Create the proposal document that establishes WHY this change is needed.
+
+
+      Sections:
+
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does
+      this solve? Why now?
+
+      - **What Changes**: Bullet list of changes. Be specific about new
+      capabilities, modifications, or removals. Mark breaking changes with
+      **BREAKING**.
+
+      - **Capabilities**: Identify which specs will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
+      - **Impact**: Affected code, APIs, dependencies, or systems.
+
+
+      IMPORTANT: The Capabilities section is critical. It creates the contract
+      between
+
+      proposal and specs phases. Research existing specs before filling this in.
+
+      Each capability listed here will need a corresponding spec file.
+
+
+      Keep it concise (1-2 pages). Focus on the "why" not the "how" -
+
+      implementation details belong in design.md.
+
+
+      This is the foundation - specs, design, and tasks all build on this.
+    requires:
+      - brief
+  - id: specs
+    generates: specs/**/*.md
+    description: Detailed specifications for the change
+    template: spec.md
+    instruction: >
+      Create specification files that define WHAT the system should do.
+
+
+      Create one spec file per capability listed in the proposal's Capabilities
+      section.
+
+      - New capabilities: use the exact kebab-case name from the proposal
+      (specs/<capability>/spec.md).
+
+      - Modified capabilities: use the existing spec folder name from
+      openspec/specs/<capability>/ when creating the delta spec at
+      specs/<capability>/spec.md.
+
+
+      Delta operations (use ## headers):
+
+      - **ADDED Requirements**: New capabilities
+
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated
+      content
+
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason**
+      and **Migration**
+
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+
+      Format requirements:
+
+      - Each requirement: `### Requirement: <name>` followed by description
+
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3
+      hashtags or bullets will fail silently.
+
+      - Every requirement MUST have at least one scenario.
+
+
+      MODIFIED requirements workflow:
+
+      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
+
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all
+      scenarios)
+
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+
+      Common pitfall: Using MODIFIED with partial content loses detail at
+      archive time.
+
+      If adding new concerns without changing existing behavior, use ADDED
+      instead.
+
+
+      Example:
+
+      ```
+
+      ## ADDED Requirements
+
+
+      ### Requirement: User can export data
+
+      The system SHALL allow users to export their data in CSV format.
+
+
+      #### Scenario: Successful export
+
+      - **WHEN** user clicks "Export" button
+
+      - **THEN** system downloads a CSV file with all user data
+
+
+      ## REMOVED Requirements
+
+
+      ### Requirement: Legacy export
+
+      **Reason**: Replaced by new export system
+
+      **Migration**: Use new export endpoint at /api/v2/export
+
+      ```
+
+
+      Specs should be testable - each scenario is a potential test case.
+    requires:
+      - proposal
+  - id: design
+    generates: design.md
+    description: Technical design document with implementation details
+    template: design.md
+    instruction: >
+      Create the design document that explains HOW to implement the change.
+
+
+      When to include design.md (create only if any apply):
+
+      - Cross-cutting change (multiple services/modules) or new architectural
+      pattern
+
+      - New external dependency or significant data model changes
+
+      - Security, performance, or migration complexity
+
+      - Ambiguity that benefits from technical decisions before coding
+
+
+      Sections:
+
+      - **Context**: Background, current state, constraints, stakeholders
+
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
+
+      - **Decisions**: Key technical choices with rationale (why X over Y?).
+      Include alternatives considered for each decision.
+
+      - **Risks / Trade-offs**: Known limitations, things that could go wrong.
+      Format: [Risk] → Mitigation
+
+      - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
+
+      - **Open Questions**: Outstanding decisions or unknowns to resolve
+
+
+      Focus on architecture and approach, not line-by-line implementation.
+
+      Reference the proposal for motivation and specs for requirements.
+
+
+      Good design docs explain the "why" behind technical decisions.
+    requires:
+      - proposal
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist with trackable tasks in orchestra-supervised format
+    template: tasks.md
+    instruction: >
+      Create the task list that breaks down the implementation work.
+
+
+      **CRITICAL: Each task MUST follow the orchestra-supervised format below.**
+
+      The supervisor parses specific blocks to dispatch workers and track evidence.
+
+
+      ## Required task format
+
+
+      Each task must have:
+
+      1. A checkbox line with a stable ref tag: `- [ ] X.Y Description [#RN]`
+
+      2. An `ACCEPT:` block listing observable acceptance criteria (what must be true)
+
+      3. A `TEST:` block with `SCOPE: CLI | GUI | MIXED` and concrete test steps
+
+      4. Empty `BUNDLE:` and `EVIDENCE:` placeholder lines
+
+
+      ## Example
+
+
+      ```
+
+      ## 1. Core Implementation
+
+
+      - [ ] 1.1 Implement the export feature [#R1]
+
+        ACCEPT:
+        - `export --format csv` writes a valid CSV file to the output path
+        - The file contains a header row and one row per record
+        - Exit code is 0 on success, non-zero on error
+
+        TEST: SCOPE: CLI
+        - Create a fixture with 3 records
+        - Run `export --format csv output.csv` and assert exit 0
+        - Assert output.csv has 4 lines (header + 3 rows)
+        - Run with missing output dir and assert exit non-zero
+
+        BUNDLE:
+        EVIDENCE:
+
+      - [ ] 1.2 Add error handling for missing input [#R2]
+
+        ACCEPT:
+        - Running without required args prints usage to stderr and exits non-zero
+        - A clear error message identifies the missing argument
+
+        TEST: SCOPE: CLI
+        - Run with no args and assert exit non-zero
+        - Assert stderr contains the missing argument name
+
+        BUNDLE:
+        EVIDENCE:
+
+      ```
+
+
+      ## Rules
+
+
+      - One stable ref tag per task (e.g. `[#R1]`). Ref tags must be unique across all tasks.
+
+      - `ACCEPT:` criteria must be user-observable, not implementation details.
+
+      - `TEST:` must include `SCOPE:` on the first line (CLI, GUI, or MIXED).
+
+      - `BUNDLE:` and `EVIDENCE:` must be present as empty placeholders — the supervisor fills them.
+
+      - Group related tasks under `## N. Group Name` headings.
+
+      - Order tasks by dependency (implement before test, core before edge cases).
+
+
+      Reference specs for what needs to be built, design for how to build it.
+    requires:
+      - specs
+      - design
+  - id: feature-ledger
+    generates: feature_list.json
+    description: Stable ref-based feature ledger for repository-local orchestration
+    template: feature-list.json
+    instruction: >
+      Create a deterministic JSON array of feature entries mapped from the
+      stable ref tags used in tasks.md.
+
+
+      Rules:
+
+      - one object per unique ref tag
+
+      - use keys: ref, feature, passes
+
+      - keep feature text end-to-end and user-observable
+
+      - default passes to false unless the change already includes verified
+      evidence proving the feature passed
+    requires:
+      - tasks
+  - id: progress-ledger
+    generates: progress.txt
+    description: Append-only progress ledger placeholder for repository-local orchestration
+    template: progress.txt
+    instruction: >
+      Create the initial progress ledger file for this change.
+
+
+      If no execution attempts have happened yet, add one short placeholder line
+      stating that no runs are recorded.
+
+
+      If execution history already exists, use one line per run with timestamp,
+      task id, result, and bundle/evidence references.
+    requires:
+      - tasks
+  - id: unblock-note
+    generates: unblock-note.md
+    description: Blocker note format used when execution gets stuck
+    template: unblock-note.md
+    instruction: >
+      Create a compact unblock note template for this change.
+
+
+      Required sections:
+
+      - Blocker
+
+      - Likely cause
+
+      - Evidence
+
+      - Next steps
+
+      - If still failing
+
+
+      If there is no current blocker, state that the note is a placeholder for future failures.
+    requires:
+      - tasks
+apply:
+  requires:
+    - tasks
+    - feature-ledger
+    - progress-ledger
+    - unblock-note
+  tracks: tasks.md
+  instruction: |
+    Read context files, work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.

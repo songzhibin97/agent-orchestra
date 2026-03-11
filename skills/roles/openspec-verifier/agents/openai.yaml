@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Verifier"
+  short_description: "Run a validation bundle and record formal evidence."
+  default_prompt: "Validate the most recent OpenSpec bundle for the selected task, run the validation script, and write a formal EVIDENCE line with PASS or FAIL result."

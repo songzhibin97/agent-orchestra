@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Implementer"
+  short_description: "Implement one OpenSpec task and produce a validation bundle."
+  default_prompt: "Implement exactly one assigned OpenSpec task, create a validation bundle, and write the BUNDLE line. Do not validate, write EVIDENCE, or commit."

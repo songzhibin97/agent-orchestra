@@ -1,0 +1,45 @@
+{
+  "dispatchers": {
+    "codex": {
+      "command": "codex exec --full-auto --skip-git-repo-check",
+      "timeout_seconds": 600,
+      "model": null,
+      "reasoning_effort": null
+    },
+    "cli": {
+      "command": "claude --dangerously-skip-permissions -p",
+      "prompt_mode": "argument",
+      "timeout_seconds": 600
+    },
+    "subagent": {
+      "isolation": "none",
+      "max_turns": null,
+      "timeout_seconds": null
+    },
+    "manual": {
+      "timeout_seconds": null
+    },
+    "mcp": {
+      "server_name": null,
+      "tool_name": null,
+      "prompt_field": "prompt",
+      "timeout_seconds": 300,
+      "cli_command": null
+    }
+  },
+  "governance": {
+    "max_attempts": 3,
+    "max_research_sources": 5
+  },
+  "actions": {
+    "auto_commit": false
+  },
+  "bundle": {
+    "base_path": "auto_test_orchestra",
+    "run_folder_pattern": "run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}",
+    "required_files": ["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]
+  },
+  "validation": {
+    "gui_tool": "mcp__playwright__*"
+  }
+}

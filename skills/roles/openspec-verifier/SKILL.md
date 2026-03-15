@@ -62,6 +62,23 @@ On FAIL, also write:
 REVIEW GUIDANCE (RUN #n): <specific actionable guidance for the next attempt>
 ```
 
+## Dispatched Mode
+
+When running as a dispatched validation agent (invoked via `validation.dispatcher`):
+
+1. You receive a `VALIDATION_PROMPT` from the supervisor containing the bundle path, ACCEPT criteria, TEST steps, and SCOPE.
+2. Follow the same validation rules as standalone mode (CLI / GUI / MIXED).
+3. **Do not write to `tasks.md`** — the supervisor owns `tasks.md` writes in dispatched mode.
+4. Instead, return a structured result to the supervisor containing:
+   - `SCOPE`: CLI | GUI | MIXED
+   - `VALIDATION_BUNDLE`: the bundle path you validated
+   - `WORKER_STARTUP_LOG`: path to `logs/worker_startup.txt`
+   - `VALIDATED_CLI` and `EXIT_CODE` (if CLI scope)
+   - `VALIDATED_GUI` and `SCREENSHOTS` (if GUI scope)
+   - `RESULT`: PASS or FAIL
+   - `REVIEW_GUIDANCE`: specific actionable guidance (if FAIL)
+5. All other verifier rules and guardrails still apply.
+
 ## Guardrails
 
 - Never validate without running the actual bundle.
@@ -69,3 +86,4 @@ REVIEW GUIDANCE (RUN #n): <specific actionable guidance for the next attempt>
 - Do not modify the BUNDLE line.
 - Do not toggle checkboxes — that is the supervisor's responsibility.
 - If the bundle is malformed or missing required files, record FAIL with the specific defect.
+- In dispatched mode, do not write to `tasks.md` — return results to the supervisor.

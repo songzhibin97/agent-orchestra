@@ -392,6 +392,8 @@ Claude (supervisor) → dispatch-subagent → Agent tool launches a subagent
 
 Use this when you want Codex to write code (cheap, fast) but Claude to run validation (more capable). Split the roles across dispatchers.
 
+> **Tip:** For automatic validation dispatch (no manual two-step), see **Scenario 10** which uses `validation.dispatcher` to achieve this in a single command.
+
 ```json
 {
   "dispatchers": {
@@ -436,6 +438,73 @@ Use this when you want Codex to write code (cheap, fast) but Claude to run valid
 
 ---
 
+## Scenario 10: CC Implements + Codex Validates (Validation Dispatcher)
+
+Use this when Claude Code writes the code and Codex reviews/validates the result. The entry point is in Claude Code.
+
+```json
+{
+  "dispatchers": {
+    "subagent": {
+      "isolation": "none",
+      "max_turns": null,
+      "timeout_seconds": null
+    },
+    "codex": {
+      "command": "codex exec --full-auto --skip-git-repo-check",
+      "timeout_seconds": 600,
+      "model": null,
+      "reasoning_effort": null
+    }
+  },
+  "governance": {
+    "max_attempts": 3,
+    "max_research_sources": 5
+  },
+  "actions": {
+    "auto_commit": false
+  },
+  "bundle": {
+    "base_path": "auto_test_orchestra",
+    "run_folder_pattern": "run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}",
+    "required_files": ["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]
+  },
+  "validation": {
+    "dispatcher": "codex",
+    "gui_tool": "mcp__playwright__*"
+  }
+}
+```
+
+**Usage:**
+```text
+/orchestra-run my-change --dispatcher subagent
+```
+
+**How it works:**
+```
+Claude (supervisor) → dispatch-subagent → Claude subagent writes code + BUNDLE
+                   → dispatch-codex (validation) → Codex runs bundle, returns PASS/FAIL
+                   → supervisor writes EVIDENCE based on Codex result
+```
+
+**Reverse — Codex implements + CC validates:**
+```json
+"validation": {
+  "dispatcher": "subagent",
+  "gui_tool": "mcp__playwright__*"
+}
+```
+```text
+/orchestra-run my-change --dispatcher codex
+```
+
+**Key:** `--dispatcher` controls who implements, `validation.dispatcher` controls who validates. They are independent.
+
+**Prerequisites:** Both `codex` CLI and Claude Code must be available.
+
+---
+
 ## Quick Reference
 
 | Want to... | Dispatcher | Key Config |
@@ -449,4 +518,6 @@ Use this when you want Codex to write code (cheap, fast) but Claude to run valid
 | Human implements | `manual` | — |
 | Get more retries | — | `governance.max_attempts: 10` |
 | Auto-commit on pass | — | `actions.auto_commit: true` |
+| CC implements + Codex validates | `subagent` | `validation.dispatcher: "codex"` |
+| Codex implements + CC validates | `codex` | `validation.dispatcher: "subagent"` |
 

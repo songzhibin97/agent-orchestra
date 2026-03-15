@@ -68,9 +68,33 @@ Each dispatcher skill defines how implementation work is sent to an external exe
 | `dispatch-mcp` | MCP tool | MCP tool call |
 | `dispatch-manual` | Human | Manual handoff |
 
-Key principle: dispatchers only delegate implementer work. Validation stays with the supervisor.
+Key principle: dispatchers only delegate implementer work. Validation stays with the supervisor unless `validation.dispatcher` is configured (see below).
 
 When you pass `--dispatcher codex`, the active entrypoint resolves that name to the `dispatch-codex` skill.
+
+## Validation Dispatcher
+
+By default, validation runs locally — the supervisor (or verifier) executes the bundle and captures evidence. When `validation.dispatcher` is set in `.orchestra/config.json`, the supervisor dispatches validation to the named dispatcher instead.
+
+```text
+validation.dispatcher = null (default):
+  supervisor → verifier runs bundle locally → EVIDENCE
+
+validation.dispatcher = "codex":
+  supervisor → dispatch-codex → Codex runs bundle → returns result → supervisor writes EVIDENCE
+```
+
+This enables cross-agent workflows where different agents handle implementation and validation:
+
+```text
+CC implements + Codex validates:
+  --dispatcher subagent, validation.dispatcher = "codex"
+
+Codex implements + CC validates:
+  --dispatcher codex, validation.dispatcher = "subagent"
+```
+
+The implementation dispatcher (`--dispatcher`) and validation dispatcher (`validation.dispatcher`) are independent — any combination is valid.
 
 ## Role × Dispatcher Matrix
 
@@ -82,6 +106,14 @@ implementer × subagent    → Claude subagent writes code
 implementer × manual      → Human writes code
 
 supervisor × (any)        → Supervisor coordinates, dispatcher determines who implements
+```
+
+When `validation.dispatcher` is configured, validation also becomes part of the matrix:
+
+```text
+verifier × codex          → Codex validates
+verifier × subagent       → Claude subagent validates
+verifier × cli            → CLI tool validates
 ```
 
 ## Data Flow

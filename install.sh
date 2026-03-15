@@ -206,28 +206,26 @@ echo "Writing manifest..."
 
 MANIFEST_FILE="$TARGET_DIR/.orchestra/manifest.json"
 {
-  echo "{"
-  echo "  \"installed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\","
-  echo "  \"files\": ["
-  for i in "${!MANIFEST_FILES[@]}"; do
-    if [ "$i" -lt $(( ${#MANIFEST_FILES[@]} - 1 )) ]; then
-      echo "    \"${MANIFEST_FILES[$i]}\","
-    else
-      echo "    \"${MANIFEST_FILES[$i]}\""
-    fi
-  done
-  echo "  ],"
-  echo "  \"directories\": ["
-  for i in "${!MANIFEST_DIRS[@]}"; do
-    if [ "$i" -lt $(( ${#MANIFEST_DIRS[@]} - 1 )) ]; then
-      echo "    \"${MANIFEST_DIRS[$i]}\","
-    else
-      echo "    \"${MANIFEST_DIRS[$i]}\""
-    fi
-  done
-  echo "  ]"
-  echo "}"
-} > "$MANIFEST_FILE"
+  printf '%s\n' "${MANIFEST_FILES[@]}"
+  echo "---"
+  printf '%s\n' "${MANIFEST_DIRS[@]}"
+} | python3 -c "
+import json, sys
+
+lines = sys.stdin.read().strip().split('\n')
+sep = lines.index('---')
+files = [l for l in lines[:sep] if l]
+dirs = [l for l in lines[sep+1:] if l]
+
+manifest = {
+    'installed_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)',
+    'files': files,
+    'directories': dirs
+}
+
+with open(sys.argv[1], 'w') as f:
+    json.dump(manifest, f, indent=2, ensure_ascii=False)
+" "$MANIFEST_FILE"
 
 log "→ .orchestra/manifest.json"
 
@@ -241,63 +239,62 @@ REGISTERED_MCP=""
 register_mcp_if_missing() {
   local name="$1"
   local cmd="$2"
-  local arg1="$3"
-  local arg2="$4"
-  local arg3="$5"
-  local description="$6"
+  shift 2
+  local description="${!#}"  # last argument is description
+  local args=("${@:1:$#-1}")  # all except last are args
+  local description="$description"
 
   if [ ! -f "$CLAUDE_SETTINGS" ]; then
     return
   fi
 
-  # Check if server already registered
-  if python3 -c "
-import json, sys
-with open('$CLAUDE_SETTINGS') as f:
-    cfg = json.load(f)
-if '$name' in cfg.get('mcpServers', {}):
-    sys.exit(0)
-else:
-    sys.exit(1)
-" 2>/dev/null; then
-    log "SKIP $name (already registered)"
-    return
-  fi
+  # Check if server already registered and register if missing (single Python call)
+  python3 - "$CLAUDE_SETTINGS" "$name" "$cmd" "$description" "${args[@]}" <<'PYEOF'
+import json, sys, os
 
-  # Register it
-  python3 - <<PYEOF
-import json
+cfg_path = sys.argv[1]
+name = sys.argv[2]
+cmd = sys.argv[3]
+description = sys.argv[4]
+args = [a for a in sys.argv[5:] if a]
 
-cfg_path = "$CLAUDE_SETTINGS"
 with open(cfg_path) as f:
     cfg = json.load(f)
 
+if name in cfg.get("mcpServers", {}):
+    print(f"  SKIP {name} (already registered)")
+    sys.exit(0)
+
 cfg.setdefault("mcpServers", {})
-args = [x for x in ["$arg1", "$arg2", "$arg3"] if x]
-cfg["mcpServers"]["$name"] = {
-    "command": "$cmd",
+cfg["mcpServers"][name] = {
+    "command": cmd,
     "args": args,
-    "description": "$description"
+    "description": description
 }
 
 with open(cfg_path, "w") as f:
     json.dump(cfg, f, indent=2, ensure_ascii=False)
+
+print(f"  → Registered MCP: {name}")
 PYEOF
-  log "→ Registered MCP: $name"
-  REGISTERED_MCP="$REGISTERED_MCP $name"
+  if [ $? -eq 0 ]; then
+    REGISTERED_MCP="$REGISTERED_MCP $name"
+  fi
 }
 
 if command -v npx >/dev/null 2>&1; then
   # context7 — documentation query provider used by openspec-researcher
   register_mcp_if_missing \
     "context7" \
-    "npx" "-y" "@upstash/context7-mcp@latest" "" \
+    "npx" \
+    "-y" "@upstash/context7-mcp@latest" \
     "Context7 文档查询 MCP"
 
   # playwright — GUI validation tool used by openspec-verifier
   register_mcp_if_missing \
     "playwright" \
-    "npx" "-y" "@playwright/mcp@latest" "" \
+    "npx" \
+    "-y" "@playwright/mcp@latest" \
     "Playwright GUI 测试 MCP"
 else
   echo "  SKIP: npx not found. Install Node.js to enable optional MCP tools."

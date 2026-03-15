@@ -76,4 +76,5 @@ When a config value is `null`, the feature is disabled or uses the documented de
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| `dispatcher` | string \| null | `null` | When set, validation is dispatched to the named dispatcher (e.g., `"codex"`, `"subagent"`, `"cli"`, `"mcp"`, `"manual"`) instead of running locally. The dispatcher config is read from `dispatchers.<name>`. When `null`, validation runs locally (original behavior). |
 | `gui_tool` | string | `"mcp__playwright__*"` | MCP tool pattern used for GUI validation |

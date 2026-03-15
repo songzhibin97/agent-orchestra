@@ -16,7 +16,8 @@ Fully automated execution of an OpenSpec change.
 
 1. Read `openspec/changes/<change-id>/tasks.md`, `feature_list.json`, and `progress.txt`.
 2. Read `openspec/project.md` as the shared protocol contract.
-3. If `--dispatcher` not provided:
+3. Read `.orchestra/config.json`. If `validation.dispatcher` is set, verify the named dispatcher skill exists (`skills/dispatchers/dispatch-<name>/SKILL.md`). If not found, report error and stop.
+4. If `--dispatcher` not provided:
    - List available dispatchers (check which dispatcher skills are installed).
    - Ask the user to choose one.
 4. Load the chosen dispatcher skill (`skills/dispatchers/dispatch-<name>/SKILL.md`).
@@ -47,10 +48,25 @@ Follow the selected dispatcher's Dispatch Steps with the built TASK_PROMPT.
 
 ### Step 4 — Validate
 
+Read `validation.dispatcher` from `.orchestra/config.json`.
+
+**If `validation.dispatcher` is null (default — local validation):**
+
 Following `openspec-verifier` skill rules:
 - Check for BUNDLE line in `tasks.md`.
-- Run bundle validation.
+- Run bundle validation locally.
 - Write EVIDENCE line with PASS or FAIL.
+
+**If `validation.dispatcher` is set (dispatched validation):**
+
+- Check for BUNDLE line in `tasks.md`.
+- Build a `VALIDATION_PROMPT` (see supervisor skill's Dispatched Validation section).
+- Dispatch validation to the named dispatcher (e.g., `codex`, `subagent`, `cli`, `mcp`, `manual`).
+- Read the validation agent's structured result.
+- The supervisor writes the EVIDENCE line based on the returned result.
+- If the validation agent fails to return a result, treat as FAIL.
+
+**Common (both modes):**
 
 On TIMEOUT / CRASH / SILENT_FAILURE:
 - Follow `timeout-recovery.md` rules.

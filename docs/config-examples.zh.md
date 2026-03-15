@@ -393,6 +393,8 @@ Claude（supervisor）→ dispatch-subagent → Agent tool 启动 subagent
 
 适合希望 Codex 负责写代码（成本低、速度快），Claude 负责运行验证（能力更强）的场景。
 
+> **提示：** 如需自动化验证派发（无需手动两步操作），参见**场景十**，使用 `validation.dispatcher` 单条命令即可完成。
+
 ```json
 {
   "dispatchers": {
@@ -437,6 +439,73 @@ Claude（supervisor）→ dispatch-subagent → Agent tool 启动 subagent
 
 ---
 
+## 场景十：CC 实现 + Codex 验证（Validation Dispatcher）
+
+适合 Claude Code 写代码、Codex 负责审查验证的场景。入口在 Claude Code。
+
+```json
+{
+  "dispatchers": {
+    "subagent": {
+      "isolation": "none",
+      "max_turns": null,
+      "timeout_seconds": null
+    },
+    "codex": {
+      "command": "codex exec --full-auto --skip-git-repo-check",
+      "timeout_seconds": 600,
+      "model": null,
+      "reasoning_effort": null
+    }
+  },
+  "governance": {
+    "max_attempts": 3,
+    "max_research_sources": 5
+  },
+  "actions": {
+    "auto_commit": false
+  },
+  "bundle": {
+    "base_path": "auto_test_orchestra",
+    "run_folder_pattern": "run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}",
+    "required_files": ["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]
+  },
+  "validation": {
+    "dispatcher": "codex",
+    "gui_tool": "mcp__playwright__*"
+  }
+}
+```
+
+**使用方式：**
+```text
+/orchestra-run my-change --dispatcher subagent
+```
+
+**调用链：**
+```
+Claude（supervisor）→ dispatch-subagent → Claude subagent 写代码 + BUNDLE
+                   → dispatch-codex（验证）→ Codex 运行 bundle，返回 PASS/FAIL
+                   → supervisor 根据 Codex 结果写入 EVIDENCE
+```
+
+**反向 — Codex 实现 + CC 验证：**
+```json
+"validation": {
+  "dispatcher": "subagent",
+  "gui_tool": "mcp__playwright__*"
+}
+```
+```text
+/orchestra-run my-change --dispatcher codex
+```
+
+**要点：** `--dispatcher` 控制谁实现，`validation.dispatcher` 控制谁验证。两者完全独立。
+
+**前置条件：** `codex` CLI 和 Claude Code 均需可用。
+
+---
+
 ## 快速查找
 
 | 想做什么 | Dispatcher | 关键配置 |
@@ -450,4 +519,6 @@ Claude（supervisor）→ dispatch-subagent → Agent tool 启动 subagent
 | 人工实现 | `manual` | — |
 | 增加重试次数 | — | `governance.max_attempts: 10` |
 | 每次 PASS 自动 commit | — | `actions.auto_commit: true` |
+| CC 实现 + Codex 验证 | `subagent` | `validation.dispatcher: "codex"` |
+| Codex 实现 + CC 验证 | `codex` | `validation.dispatcher: "subagent"` |
 

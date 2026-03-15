@@ -76,4 +76,5 @@ Agent-Orchestra 的所有运行时配置集中在 `.orchestra/config.json`。该
 
 | 键 | 类型 | 默认值 | 说明 |
 |----|------|--------|------|
+| `dispatcher` | string \| null | `null` | 设置后，验证阶段将通过指定的调度器派发（如 `"codex"`、`"subagent"`、`"cli"`、`"mcp"`、`"manual"`），而非本地执行。调度器配置从 `dispatchers.<name>` 读取。为 `null` 时走本地验证（原有行为）。 |
 | `gui_tool` | string | `"mcp__playwright__*"` | GUI 验证使用的 MCP tool 匹配模式 |

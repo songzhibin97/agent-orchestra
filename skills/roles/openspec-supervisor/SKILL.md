@@ -37,9 +37,34 @@ Pick the first unchecked task that is:
 
 ## Validation
 
+Read `validation.dispatcher` from `.orchestra/config.json`.
+
+### Local validation (default — `validation.dispatcher` is null)
+
 - For CLI scope: run the bundle entrypoint and capture exit code and key assertions.
 - For GUI or MIXED scope: use MCP browser tooling for evidence collection.
 - Mark done only after the evidence line contains the required bundle path, startup log, validation commands, result, and PASS-only git anchors.
+
+### Dispatched validation (`validation.dispatcher` is set)
+
+When `validation.dispatcher` names a dispatcher (e.g., `"codex"`, `"subagent"`, `"cli"`, `"mcp"`, `"manual"`):
+
+1. Read the corresponding dispatcher skill's `SKILL.md`.
+2. Build the `VALIDATION_PROMPT`:
+   a. Role instructions: reference `openspec-verifier` skill rules.
+   b. Bundle path: the `VALIDATION_BUNDLE` from the most recent `BUNDLE (RUN #n)` line.
+   c. ACCEPT criteria and TEST steps from the task block in `tasks.md`.
+   d. SCOPE (CLI / GUI / MIXED) from the task's TEST block.
+   e. Worker startup log path.
+   f. Expected output: the agent must return a structured result containing SCOPE, VALIDATION_BUNDLE, WORKER_STARTUP_LOG, VALIDATED_CLI and EXIT_CODE (if CLI scope), VALIDATED_GUI and SCREENSHOTS (if GUI scope), RESULT (PASS or FAIL), and REVIEW GUIDANCE (if FAIL).
+   g. If retry: append prior `REVIEW GUIDANCE`.
+3. Follow the dispatcher skill's **Dispatch Steps** to invoke the validation agent.
+4. Read the validation agent's result.
+5. The **supervisor** writes the `EVIDENCE (RUN #n)` line in `tasks.md` based on the returned result — the validation agent does not write to `tasks.md` directly.
+
+If the validation agent does not return a parseable result, treat as FAIL with REVIEW GUIDANCE noting the validation dispatch failure.
+
+### Common
 
 Use [monitor-checklist.md](references/monitor-checklist.md) during runs.
 Use the `openspec-verifier` skill for detailed validation rules.

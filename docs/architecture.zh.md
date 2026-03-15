@@ -68,9 +68,33 @@ agent-orchestra/
 | `dispatch-mcp` | MCP 工具 | MCP tool call |
 | `dispatch-manual` | 人工 | 手动交接 |
 
-关键原则：dispatcher 只负责委派 implementer 工作，验证始终由 supervisor 负责。
+关键原则：dispatcher 只负责委派 implementer 工作，验证默认由 supervisor 本地负责，除非配置了 `validation.dispatcher`（见下文）。
 
 当你传入 `--dispatcher codex` 时，当前入口最终解析到的是 `dispatch-codex` 这个 skill。
+
+## 验证调度器（Validation Dispatcher）
+
+默认情况下，验证在本地执行——supervisor（或 verifier）运行 bundle 并采集 evidence。当 `.orchestra/config.json` 中的 `validation.dispatcher` 被设置时，supervisor 会将验证通过对应 dispatcher 派发给外部 agent。
+
+```text
+validation.dispatcher = null（默认）:
+  supervisor → verifier 本地运行 bundle → EVIDENCE
+
+validation.dispatcher = "codex":
+  supervisor → dispatch-codex → Codex 运行 bundle → 返回结果 → supervisor 写入 EVIDENCE
+```
+
+这使得不同 agent 可以分别负责实现和验证：
+
+```text
+CC 实现 + Codex 验证:
+  --dispatcher subagent, validation.dispatcher = "codex"
+
+Codex 实现 + CC 验证:
+  --dispatcher codex, validation.dispatcher = "subagent"
+```
+
+实现调度器（`--dispatcher`）和验证调度器（`validation.dispatcher`）完全独立，可任意组合。
 
 ## 角色 × 调度器矩阵
 
@@ -82,6 +106,14 @@ implementer × subagent    → 由 Claude subagent 写代码
 implementer × manual      → 由人工写代码
 
 supervisor × (any)        → supervisor 负责协调，dispatcher 决定实现者是谁
+```
+
+当配置了 `validation.dispatcher` 时，验证也加入矩阵：
+
+```text
+verifier × codex          → 由 Codex 验证
+verifier × subagent       → 由 Claude subagent 验证
+verifier × cli            → 由 CLI 工具验证
 ```
 
 ## 数据流

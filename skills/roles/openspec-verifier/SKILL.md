@@ -21,10 +21,11 @@ When used independently (not called by a supervisor):
 For tasks with `SCOPE: CLI`:
 
 1. Verify the bundle directory exists.
-2. Verify required files exist: `task.md`, `run.sh`, `logs/worker_startup.txt`.
-3. Execute `bash run.sh` from the bundle directory.
-4. Capture the exit code and any key assertions from stdout/stderr.
-5. Record: PASS (exit 0) or FAIL (non-zero exit).
+2. Verify the bundle directory name matches `.orchestra/config.json.bundle.run_folder_pattern`.
+3. Verify required files exist: `task.md`, `run.sh`, `run.bat`, `logs/worker_startup.txt`, plus any additional paths listed in `.orchestra/config.json.bundle.required_files`.
+4. Execute `bash run.sh` from the bundle directory.
+5. Capture the exit code and any key assertions from stdout/stderr.
+6. Record: PASS only when the exit code is `0` and all bundle integrity checks succeeded.
 
 ## GUI Validation
 
@@ -34,7 +35,7 @@ For tasks with `SCOPE: GUI` or `SCOPE: MIXED`:
 2. Use MCP browser tooling (`mcp__playwright__*`) to drive the UI.
 3. Follow the runbook in `tests/` if present.
 4. Capture screenshots as evidence artifacts.
-5. Record: PASS (all GUI checks pass) or FAIL (any check fails).
+5. PASS requires both GUI checks and bundle integrity checks to succeed.
 
 ## MIXED Validation
 
@@ -73,6 +74,10 @@ When running as a dispatched validation agent (invoked via `validation.dispatche
    - `SCOPE`: CLI | GUI | MIXED
    - `VALIDATION_BUNDLE`: the bundle path you validated
    - `WORKER_STARTUP_LOG`: path to `logs/worker_startup.txt`
+   - `BUNDLE_EXISTS`: `true|false`
+   - `REQUIRED_FILES_OK`: `true|false`
+   - `BUNDLE_PATH_CONFIRMED`: `true|false`
+   - `BUNDLE_NAME_PATTERN_OK`: `true|false`
    - `VALIDATED_CLI` and `EXIT_CODE` (if CLI scope)
    - `VALIDATED_GUI` and `SCREENSHOTS` (if GUI scope)
    - `RESULT`: PASS or FAIL
@@ -85,5 +90,6 @@ When running as a dispatched validation agent (invoked via `validation.dispatche
 - Never mark PASS based on code review alone — execution evidence is required.
 - Do not modify the BUNDLE line.
 - Do not toggle checkboxes — that is the supervisor's responsibility.
-- If the bundle is malformed or missing required files, record FAIL with the specific defect.
+- If the bundle path is wrong, the run folder name is malformed, or required files are missing, record FAIL with the specific defect.
+- `EXIT_CODE: 0` does not override bundle integrity failures.
 - In dispatched mode, do not write to `tasks.md` — return results to the supervisor.

@@ -203,7 +203,7 @@ Claude → dispatch-mcp skill → mcp__kimi-worker__execute_task(task="...")
 **修改了什么：**
 - `governance.max_attempts`: `3` → `10` — 任务最多尝试 10 次才 MAXED
 - `governance.max_research_sources`: `5` → `8` — researcher 可以查阅更多来源
-- `actions.auto_commit`: `false` → `true` — 每次 PASS 自动创建 git commit
+- `actions.auto_commit`: `false` → `true` — 每次 PASS 自动创建 git commit，但前提是 committer 先确认工作区除当前 task 变更、bookkeeping 文件和当前 run bundle 外没有额外脏文件
 
 ---
 
@@ -519,6 +519,6 @@ Claude（supervisor）→ dispatch-subagent → Claude subagent 写代码 + BUND
 | 人工实现 | `manual` | — |
 | 增加重试次数 | — | `governance.max_attempts: 10` |
 | 每次 PASS 自动 commit | — | `actions.auto_commit: true` |
+| PASS 门槛 | — | bundle 路径存在、目录名匹配 `run_folder_pattern`、`required_files` 全部存在，且工作区通过洁净门禁 |
 | CC 实现 + Codex 验证 | `subagent` | `validation.dispatcher: "codex"` |
 | Codex 实现 + CC 验证 | `codex` | `validation.dispatcher: "subagent"` |
-

@@ -62,19 +62,19 @@ Agent-Orchestra 的所有运行时配置集中在 `.orchestra/config.json`。该
 
 | 键 | 类型 | 默认值 | 说明 |
 |----|------|--------|------|
-| `auto_commit` | boolean | `false` | 为 `true` 时，committer 在 PASS 后创建 checkpoint git commit |
+| `auto_commit` | boolean | `false` | 为 `true` 时，committer 在 PASS 后创建 checkpoint git commit，但前提是通过工作区洁净门禁（`git status --porcelain`），确认没有额外缓存、构建产物、本地二进制或无关文件残留 |
 
 ## bundle（验证包）
 
 | 键 | 类型 | 默认值 | 说明 |
 |----|------|--------|------|
 | `base_path` | string | `"auto_test_orchestra"` | 验证包根目录 |
-| `run_folder_pattern` | string | `"run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}"` | 运行文件夹命名格式 |
-| `required_files` | string[] | `["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]` | 每个 bundle 必须包含的文件 |
+| `run_folder_pattern` | string | `"run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}"` | 运行文件夹命名格式。只有实际 bundle 目录名匹配该格式，才允许判定 PASS |
+| `required_files` | string[] | `["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]` | 每个 bundle 必须包含的文件。缺任何文件都属于硬 FAIL，不是提示信息 |
 
 ## validation（验证）
 
 | 键 | 类型 | 默认值 | 说明 |
 |----|------|--------|------|
-| `dispatcher` | string \| null | `null` | 设置后，验证阶段将通过指定的调度器派发（如 `"codex"`、`"subagent"`、`"cli"`、`"mcp"`、`"manual"`），而非本地执行。调度器配置从 `dispatchers.<name>` 读取。为 `null` 时走本地验证（原有行为）。 |
+| `dispatcher` | string \| null | `null` | 设置后，验证阶段将通过指定的调度器派发（如 `"codex"`、`"subagent"`、`"cli"`、`"mcp"`、`"manual"`），而非本地执行。调度器配置从 `dispatchers.<name>` 读取。为 `null` 时走本地验证（原有行为）。即使是派发验证，也必须返回 bundle 完整性字段，不能只返回 PASS/FAIL |
 | `gui_tool` | string | `"mcp__playwright__*"` | GUI 验证使用的 MCP tool 匹配模式 |

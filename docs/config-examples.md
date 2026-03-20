@@ -202,7 +202,7 @@ Use this when you're iterating fast and want more attempts before a task is mark
 **What changed:**
 - `governance.max_attempts`: `3` → `10` — tasks get 10 tries before MAXED
 - `governance.max_research_sources`: `5` → `8` — researcher checks more sources
-- `actions.auto_commit`: `false` → `true` — automatic git commit on every PASS
+- `actions.auto_commit`: `false` → `true` — automatic git commit on every PASS, but only after the committer verifies the worktree is clean except for current-task changes, bookkeeping files, and the current run bundle
 
 ---
 
@@ -518,6 +518,6 @@ Claude (supervisor) → dispatch-subagent → Claude subagent writes code + BUND
 | Human implements | `manual` | — |
 | Get more retries | — | `governance.max_attempts: 10` |
 | Auto-commit on pass | — | `actions.auto_commit: true` |
+| PASS gate | — | Bundle path exists, folder name matches `run_folder_pattern`, all `required_files` exist, and the worktree passes the clean-worktree gate |
 | CC implements + Codex validates | `subagent` | `validation.dispatcher: "codex"` |
 | Codex implements + CC validates | `codex` | `validation.dispatcher: "subagent"` |
-

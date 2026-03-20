@@ -34,6 +34,12 @@ Pick the first unchecked task that is:
 4. Follow the dispatcher skill's **Dispatch Steps** to invoke the worker.
 5. Check worker output: does `tasks.md` have a new `BUNDLE (RUN #n)` line?
    - No BUNDLE → treat as `SILENT_FAILURE` (see [timeout-recovery.md](references/timeout-recovery.md)).
+6. Before any validation begins, verify locally:
+   - the referenced `VALIDATION_BUNDLE` directory exists
+   - the directory name matches `.orchestra/config.json.bundle.run_folder_pattern`
+   - every path in `.orchestra/config.json.bundle.required_files` exists under that bundle
+   - the startup log path referenced by the bundle resolves to the same directory
+   - Any mismatch → treat as `INVALID_BUNDLE`
 
 ## Validation
 
@@ -43,7 +49,7 @@ Read `validation.dispatcher` from `.orchestra/config.json`.
 
 - For CLI scope: run the bundle entrypoint and capture exit code and key assertions.
 - For GUI or MIXED scope: use MCP browser tooling for evidence collection.
-- Mark done only after the evidence line contains the required bundle path, startup log, validation commands, result, and PASS-only git anchors.
+- Mark done only after all bundle integrity checks pass, the validation run succeeds, and the evidence line contains the required bundle path, startup log, validation commands, result, and PASS-only git anchors.
 
 ### Dispatched validation (`validation.dispatcher` is set)
 
@@ -56,13 +62,13 @@ When `validation.dispatcher` names a dispatcher (e.g., `"codex"`, `"subagent"`, 
    c. ACCEPT criteria and TEST steps from the task block in `tasks.md`.
    d. SCOPE (CLI / GUI / MIXED) from the task's TEST block.
    e. Worker startup log path.
-   f. Expected output: the agent must return a structured result containing SCOPE, VALIDATION_BUNDLE, WORKER_STARTUP_LOG, VALIDATED_CLI and EXIT_CODE (if CLI scope), VALIDATED_GUI and SCREENSHOTS (if GUI scope), RESULT (PASS or FAIL), and REVIEW GUIDANCE (if FAIL).
+   f. Expected output: the agent must return a structured result containing SCOPE, VALIDATION_BUNDLE, WORKER_STARTUP_LOG, BUNDLE_EXISTS, REQUIRED_FILES_OK, BUNDLE_PATH_CONFIRMED, BUNDLE_NAME_PATTERN_OK, VALIDATED_CLI and EXIT_CODE (if CLI scope), VALIDATED_GUI and SCREENSHOTS (if GUI scope), RESULT (PASS or FAIL), and REVIEW GUIDANCE (if FAIL).
    g. If retry: append prior `REVIEW GUIDANCE`.
 3. Follow the dispatcher skill's **Dispatch Steps** to invoke the validation agent.
 4. Read the validation agent's result.
 5. The **supervisor** writes the `EVIDENCE (RUN #n)` line in `tasks.md` based on the returned result — the validation agent does not write to `tasks.md` directly.
 
-If the validation agent does not return a parseable result, treat as FAIL with REVIEW GUIDANCE noting the validation dispatch failure.
+If the validation agent does not return a parseable result, or any required integrity field is missing, treat as FAIL with REVIEW GUIDANCE noting the validation dispatch failure.
 
 ### Common
 
@@ -111,5 +117,8 @@ The supervisor owns:
 - One task per run.
 - One fresh run folder per attempt.
 - Record only verified facts.
+- `EXIT_CODE: 0` is not sufficient for PASS — bundle integrity checks must also succeed.
+- Never write PASS evidence when bundle path, required files, or run-folder naming are inconsistent with `.orchestra/config.json`.
+- Before invoking the committer, verify the worktree is clean except for the current task's code, bookkeeping files, and the current run bundle.
 - If validation fails, leave the checkbox unchecked and write review guidance for the next attempt.
 - Never validate your own implementation — dispatch to a worker first.

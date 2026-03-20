@@ -76,6 +76,8 @@ agent-orchestra/
 
 默认情况下，验证在本地执行——supervisor（或 verifier）运行 bundle 并采集 evidence。当 `.orchestra/config.json` 中的 `validation.dispatcher` 被设置时，supervisor 会将验证通过对应 dispatcher 派发给外部 agent。
 
+PASS 不等于 `EXIT_CODE: 0`。只有当 bundle 路径真实存在、运行目录名匹配 `bundle.run_folder_pattern`、`bundle.required_files` 中的文件全部存在，并且 committer 通过工作区洁净门禁后，才允许判定 PASS。
+
 ```text
 validation.dispatcher = null（默认）:
   supervisor → verifier 本地运行 bundle → EVIDENCE

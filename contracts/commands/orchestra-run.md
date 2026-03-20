@@ -54,17 +54,19 @@ Read `validation.dispatcher` from `.orchestra/config.json`.
 
 Following `openspec-verifier` skill rules:
 - Check for BUNDLE line in `tasks.md`.
+- Verify the referenced bundle path exists, matches `.orchestra/config.json.bundle.run_folder_pattern`, and contains every file in `.orchestra/config.json.bundle.required_files`.
 - Run bundle validation locally.
 - Write EVIDENCE line with PASS or FAIL.
 
 **If `validation.dispatcher` is set (dispatched validation):**
 
 - Check for BUNDLE line in `tasks.md`.
+- Verify the referenced bundle path exists, matches `.orchestra/config.json.bundle.run_folder_pattern`, and contains every file in `.orchestra/config.json.bundle.required_files`.
 - Build a `VALIDATION_PROMPT` (see supervisor skill's Dispatched Validation section).
 - Dispatch validation to the named dispatcher (e.g., `codex`, `subagent`, `cli`, `mcp`, `manual`).
-- Read the validation agent's structured result.
+- Read the validation agent's structured result, including bundle integrity fields.
 - The supervisor writes the EVIDENCE line based on the returned result.
-- If the validation agent fails to return a result, treat as FAIL.
+- If the validation agent fails to return a result, or integrity fields are missing / false, treat as FAIL.
 
 **Common (both modes):**
 
@@ -79,7 +81,7 @@ Following `openspec-committer` skill rules:
 - Toggle checkbox to `[x]`.
 - Update `feature_list.json`.
 - Append to `progress.txt`.
-- Create checkpoint commit if `auto_commit` is enabled.
+- Create checkpoint commit if `auto_commit` is enabled and `git status --porcelain` contains only current-task changes, bookkeeping files, and the current run bundle.
 
 ### Step 6 — Research (on FAIL)
 
@@ -121,4 +123,5 @@ Stop immediately (do not continue the loop) if:
 
 - Do not implement product code in this command.
 - Do not skip validation — every task requires a PASS EVIDENCE line to be marked done.
+- Do not treat `EXIT_CODE: 0` as sufficient for PASS — bundle integrity checks must also pass.
 - Do not run multiple tasks in parallel — one task per loop iteration.

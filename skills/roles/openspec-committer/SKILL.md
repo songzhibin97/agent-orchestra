@@ -59,6 +59,14 @@ Append one line:
 
 If `actions.auto_commit` is `true` in `.orchestra/config.json`:
 
+1. Run `git status --porcelain`.
+2. Confirm the remaining changes are limited to:
+   - the current task's product code and tests
+   - the current task's validation bundle directory
+   - `tasks.md`, `feature_list.json`, and `progress.txt`
+3. If any extra caches, local binaries, build outputs, or unrelated source files are present, stop and report `DIRTY_WORKTREE` to the supervisor.
+4. Only then run:
+
 ```bash
 git add -A
 git commit -m "orchestra: PASS task <task-id> [#<ref>] RUN #<n>"
@@ -69,5 +77,6 @@ git commit -m "orchestra: PASS task <task-id> [#<ref>] RUN #<n>"
 - Never toggle checkbox without a corresponding PASS EVIDENCE line.
 - Never set `passes: true` in feature_list.json if any associated task still has no PASS.
 - Never create a commit if `actions.auto_commit` is false or not configured in `.orchestra/config.json`.
+- Never create a commit from a dirty worktree that includes caches, build outputs, local binaries, or files unrelated to the current task.
 - Do not re-run commitment if the checkbox is already `[x]`.
 - One task per invocation — do not batch multiple tasks.

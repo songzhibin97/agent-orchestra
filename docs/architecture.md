@@ -76,6 +76,8 @@ When you pass `--dispatcher codex`, the active entrypoint resolves that name to 
 
 By default, validation runs locally — the supervisor (or verifier) executes the bundle and captures evidence. When `validation.dispatcher` is set in `.orchestra/config.json`, the supervisor dispatches validation to the named dispatcher instead.
 
+PASS requires more than `EXIT_CODE: 0`: the bundle path must exist, the run-folder name must match `bundle.run_folder_pattern`, every path in `bundle.required_files` must exist, and the committer must pass a clean-worktree gate before auto-commit.
+
 ```text
 validation.dispatcher = null (default):
   supervisor → verifier runs bundle locally → EVIDENCE

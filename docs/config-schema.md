@@ -62,19 +62,19 @@ When a config value is `null`, the feature is disabled or uses the documented de
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `auto_commit` | boolean | `false` | When `true`, the committer creates checkpoint git commits on PASS |
+| `auto_commit` | boolean | `false` | When `true`, the committer creates checkpoint git commits on PASS, but only after a clean-worktree gate (`git status --porcelain`) confirms no extra caches, build outputs, local binaries, or unrelated files remain |
 
 ## bundle
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `base_path` | string | `"auto_test_orchestra"` | Root directory for validation bundles |
-| `run_folder_pattern` | string | `"run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}"` | Naming pattern for run folders |
-| `required_files` | string[] | `["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]` | Files that must exist in every bundle |
+| `run_folder_pattern` | string | `"run-{RUN4}__task-{TASK_ID}__ref-{REF}__{TIMESTAMP}"` | Naming pattern for run folders. PASS validation requires the actual bundle directory name to match this pattern |
+| `required_files` | string[] | `["task.md", "run.sh", "run.bat", "logs/worker_startup.txt"]` | Files that must exist in every bundle. Missing files are a hard FAIL, not a warning |
 
 ## validation
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `dispatcher` | string \| null | `null` | When set, validation is dispatched to the named dispatcher (e.g., `"codex"`, `"subagent"`, `"cli"`, `"mcp"`, `"manual"`) instead of running locally. The dispatcher config is read from `dispatchers.<name>`. When `null`, validation runs locally (original behavior). |
+| `dispatcher` | string \| null | `null` | When set, validation is dispatched to the named dispatcher (e.g., `"codex"`, `"subagent"`, `"cli"`, `"mcp"`, `"manual"`) instead of running locally. The dispatcher config is read from `dispatchers.<name>`. When `null`, validation runs locally (original behavior). Dispatched validators must still return bundle-integrity fields in addition to PASS/FAIL |
 | `gui_tool` | string | `"mcp__playwright__*"` | MCP tool pattern used for GUI validation |
